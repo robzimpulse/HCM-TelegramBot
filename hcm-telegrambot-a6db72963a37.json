@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "hcm-telegrambot",
+  "private_key_id": "a6db72963a37b2872206465bb8be2e09330f0e71",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDn0spWeUeFVLHi\nELqfIPliTSMbbTXvxcuBLWFBaQrEweqHhEXO7Ku4I1k6Onrd/iy+ZnqBwYGZLJ2H\n8bQi31/fHOEh6rVERLbVFAucZBZYj5r6nNTdjs9BvbcPETUQ6+IohdmhYuiiooQr\nHHZaoNqzAhOWJFEN67EUgUhgA4VFSIZSrIqhRXrIJ/HA8UEgOhlX0hqO5HwaP9p2\nQCWEqN0SFSLDf9zI7XzLNAIkutrHQVqsTp4LqxGmf7YM10pt9nw+jb5B66eXTRqC\nmmjCQSpJl8BN4pW7Wpl3CvkdU7lIkJtGIC5K8YxMqUl0rXrNW8xybqZyyD7w8cZv\nbezeVH8jAgMBAAECggEADrnKFpIfo+2MWyLa5+7NSJxDxaM7UN7MnYkHa4NDptn2\njuMtGAbapZjBOzypv148819JGuLy24sE+rS0z55G1cJc3q2tFAgVYRWj4yxMaxW8\nL3003FoM+k0VysQ6DbgeJprSBzlkM6iFIsPtFLaxDbvtCJWH/I1jMz0/HrI6jfr9\nb19MU23gGWJNWIfDBghVnkXrtAtZa/j3lmymgavY74Cct4qROmRKop9Z4P9h6Heg\naY9ofgGkBX3SrYuLcU8V1rJsdERMReXHZ/ujhVfLE787sm1MxXFmjkl+Wu6GnbI2\n1q16ksQJ7nXY2x3FcZ4iDA7YNcsH0xmJJXtGRc9j2QKBgQD6P1eSZ1zh5nt7qNhF\n1XctAD03ieU9K5T/5Yb0QOZDNbkBW+1yE4Y54434XIUU6hbht0MBVdTT/a42kDJB\nMlRX+NGkceNx+HeDu9ibtqA577ubuF3POZGeNKpKzg9KtTAK4JGjc2A2KKgYpulI\niqK7Boc5U/os2yBtmbfQcxz9XQKBgQDtJwbEhsOLlTY5iGEUhGu++8yaFvM5zvlY\n6WIe+yzjFCmxG1z+HM30cZSqgZlGtA4R0fF5U2Bqmn/yRhXwpPC42wa+0gPfJc+L\nOuqp3zXpzKZ+I/BwfhW56QYPgXQt3seIp7R4AoO0Eq1LEGMvh+4I/C0FZuw57Obq\nkyYbXkMmfwKBgAj5KHy5dB0tlJP0k/y9EM7uSUOqkCvHWkpqwpITma4jSQUBdNw4\nUwHUZQzY1HTRiAyD88UifMU1PX/7X7Hyyg91fp707oDxtedlXvkGbWxmakXFMKfz\nmoMfxFN2XBoDsTtSniZMRtDqWEy5/3d4cSlfrI2jsz7UhK8paevxlMKJAoGARoio\n9qKuXkGO0yXA2f1YnoD9pYbV6IeqmcswJ87E1vUUQVzGF74xc1akxOGu2NyMorgy\nfcdSkeJJ06EMvXoRLqnWI8MK67+vLtXjHYsJ2fPIQRQnWw3lIFoyN0Jlb48nAXn/\nrwHwcgpsCDtjhKuFHJ8ENOsbr07Kj1Icr18l0bkCgYAH5MZagSmryAdFZzJysA7o\nANXc2a9V99YeUylDQXeko3BhFIB0XlKkVlVVRkQ/kfRwgoqmgBxhanIGXWFKKYoK\nQeqQkmtNvn3MhqrjKxMRwU7v9rwXRT9bgTy+/voDC+thVZsHJ6viIxJINSxd+PGL\nwgqnN2e6HYa9FjpouK/5mQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "hcm-telegrambot@appspot.gserviceaccount.com",
+  "client_id": "112001269925937127900",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/hcm-telegrambot%40appspot.gserviceaccount.com"
+}
