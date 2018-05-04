@@ -15,20 +15,17 @@ const helpText = "Berikut adalah command yang bisa digunakan: \n\n" +
 
 const responseText = "Baik kak, Keluhannya akan kami tindak lanjuti";
 
+const updateChatIDWithUsername = (ctx, next) => {
+    console.log("save chat_id: " + ctx.message.chat.id + " to username @"+ctx.message.chat.username);
+    next();
+};
+
 bot.use(commandParts());
 
-bot.start((ctx) => ctx.replyWithHTML(startText));
-bot.help((ctx) => ctx.replyWithHTML(helpText));
+bot.start(updateChatIDWithUsername, ctx => ctx.replyWithHTML(startText) );
+bot.help(updateChatIDWithUsername, ctx => ctx.replyWithHTML(helpText));
 
-bot.command('complain', (ctx) => {
-    console.log(ctx.state.command.splitArgs);
-    // setTimeout(() => { ctx.replyWithHTML(responseText) }, 3000);
-    return ctx.replyWithHTML(responseText);
-});
-
-bot.command('profile', (ctx) => {
-    console.log(ctx.message.text.split(' ').shift().join(' '));
-    return ctx.replyWithHTML(responseText);
-});
+bot.command('complain', updateChatIDWithUsername, ctx => ctx.replyWithHTML(responseText));
+bot.command('profile', updateChatIDWithUsername, ctx => ctx.replyWithHTML(responseText));
 
 bot.startPolling();
