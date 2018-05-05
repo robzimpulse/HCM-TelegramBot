@@ -20,12 +20,18 @@ const url = oauth2Client.generateAuthUrl({access_type: 'offline', scope: scope})
 const authButton = Markup.inlineKeyboard([ Markup.urlButton('Authorize️', url)]).extra();
 
 const Telegram = require('telegraf/telegram');
-const api = new Telegram(process.env.TOKEN);
+const Api = new Telegram(process.env.TOKEN);
+const Stage = require('telegraf/stage');
+const Scene = require('telegraf/scenes/base');
+const Composer = require('telegraf/composer');
+const WizardScene = require('telegraf/scenes/wizard');
+const { enter, leave } = Stage;
 
 const emailUpdateSuccess = "Sukses menambahkan email kakak";
 const emailNotFoundText = "Mohon maaf, Email kakak setelah di cek masih kosong. Mohon login yak.";
 const startText = "Hello, Ada yang bisa aku bantu?";
 const responseText = "Baik kak, Keluhannya akan kami tindak lanjuti";
+const responseProfile = "Berikut ini adalah data profile kakak, apabila ada yang kosong mohon di lengkapi ya.\n\n";
 
 const getEmail = (token, next) => {
     return oauth2Client.getToken(token, (err, credentials) => {
@@ -40,9 +46,23 @@ const getEmail = (token, next) => {
 
 module.exports =  {
 
+    error: (error) => { console.log("Error: "+error); },
+
     createHash: (hash, code) => { admin.database().ref('auth').child(hash).set({ code: code }); },
 
     greeting: ctx => ctx.replyWithHTML(startText),
+
+    triggerCurrentProfile: ctx => {
+        console.log("triggerCurrentProfile: "+ctx.message.chat.id+" - @"+ctx.message.chat.username);
+        admin.database().ref('users').child(ctx.message.chat.id).once('value').then(snapshot => {
+            const username = snapshot.val().username;
+            const email = snapshot.val().email;
+            return ctx.replyWithHTML(responseProfile +
+                "name: <b>"+username+"</b>\n" +
+                "email: <b>"+email+"</b>"
+            )
+        });
+    },
 
     triggerSaveUsername: (ctx, next) => {
         console.log("triggerSaveUsername: "+ctx.message.chat.id+" - @"+ctx.message.chat.username);
@@ -74,6 +94,17 @@ module.exports =  {
         });
         return next()
     },
+
+    stageSurvey: () => {
+        const survey = new Scene('survey');
+        survey.enter((ctx) => ctx.reply('What is your question? if you finish your question, type /done'));
+        survey.leave((ctx) => ctx.reply('Your question already noted.'));
+        survey.command('done', leave());
+        survey.on('message', (ctx) => ctx.reply('Send `hi`'));
+        const stage = new Stage([survey], {ttl: 10});
+        stage.register(survey);
+        return stage;
+    }
 
 };
 

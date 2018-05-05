@@ -8,19 +8,21 @@ const logger = require('morgan');
 const indexRouter = require('./routes/index');
 const Telegraf = require('telegraf');
 const commandParts = require('telegraf-command-parts');
+const Session = require('telegraf/session');
+const Stage = require('telegraf/stage');
+const { enter, leave } = Stage;
 
 const bot = new Telegraf(process.env.TOKEN);
 const app = express();
 
 // bot setup
+bot.use(Session());
 bot.use(commandParts());
+bot.use(logic.stageSurvey().middleware());
 bot.catch(logic.error);
-bot.start(
-    logic.triggerSaveUsername,
-    logic.triggerAuthorizeEmail,
-    logic.triggerUpdateEmail,
-    logic.greeting
-);
+bot.start(logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerUpdateEmail, logic.greeting);
+bot.command('my_profile', logic.triggerCurrentProfile);
+// bot.command('survey', enter('survey'));
 
 // bot.command('update_email', logic.updateUsername, ctx => {
 //     return ctx.reply("Mohon login menggunakan button dibawah ini", authButton)
