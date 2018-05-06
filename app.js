@@ -9,9 +9,7 @@ const indexRouter = require('./routes/index');
 const Telegraf = require('telegraf');
 const commandParts = require('telegraf-command-parts');
 const Session = require('telegraf/session');
-const Telegram = require('telegraf/telegram');
 const Stage = require('telegraf/stage');
-const Api = new Telegram(process.env.TOKEN);
 const bot = new Telegraf(process.env.TOKEN);
 const app = express();
 
@@ -25,11 +23,12 @@ bot.catch(logic.error);
 bot.start(logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerUpdateEmail, logic.greeting);
 bot.command('my_profile', logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerCurrentProfile);
 bot.command('add_question_survey', logic.triggerSaveUsername, logic.triggerAuthorizeEmail, enter('add_question_survey'));
+bot.on('callback_query', logic.triggerAnswerSurvey);
 
-// 0 13 * * FRI
-// const surveySchedule = schedule.scheduleJob('* * * * *', (date) => { logic.triggerSurvey(date) });
-
-// bot.command('survey', enter('survey'));
+// 0 0 13 * * FRI // run every friday at 13:00:00
+// 0 0 */1 * * * // run every 1 hour
+// */5 * * * * * // run every 5 seconds
+schedule.scheduleJob('0 0 */1 * * *', (date) => { logic.triggerSurvey(date) });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
