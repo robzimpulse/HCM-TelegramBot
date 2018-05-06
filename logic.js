@@ -20,8 +20,7 @@ const scope = ['https://www.googleapis.com/auth/userinfo.email'];
 const url = oauth2Client.generateAuthUrl({access_type: 'offline', scope: scope});
 const authButton = Markup.inlineKeyboard([ Markup.urlButton('Authorize️', url)]).extra();
 
-const Telegram = require('telegraf/telegram');
-const Api = new Telegram(process.env.TOKEN);
+
 const Stage = require('telegraf/stage');
 const Scene = require('telegraf/scenes/base');
 const Composer = require('telegraf/composer');
@@ -34,6 +33,14 @@ const startText = "Hello, Ada yang bisa aku bantu?";
 const responseText = "Baik kak, Keluhannya akan kami tindak lanjuti";
 const responseProfile = "Berikut ini adalah data profile kakak, apabila ada yang kosong mohon di lengkapi ya.\n\n";
 
+const questionSurveyText = "Question";
+const answerSurveyChoicesCount = "Number of Choices";
+
+const openingText = "Halo, kami dari Tim HCM Bukalapak. " +
+    "Saat ini kami sedang melaksanakan Employee Survey sebagai salah satu masukan untuk Bukalapak. " +
+    "Apabila Anda tidak menjawab dalam waktu 5 menit, maka saya akan mengirimkan pertanyaan lanjutan.";
+
+
 const getEmail = (token, next) => {
     return oauth2Client.getToken(token, (err, credentials) => {
         if (err) { return next(null); }
@@ -45,11 +52,13 @@ const getEmail = (token, next) => {
     });
 };
 
+const saveQuestion = (ctx) => {
+    return
+};
+
 module.exports =  {
 
     error: (error) => { console.log("Error: "+error); },
-
-    createHash: (hash, code) => { admin.database().ref('auth').child(hash).set({ code: code }); },
 
     greeting: ctx => ctx.replyWithHTML(startText),
 
@@ -97,19 +106,38 @@ module.exports =  {
     },
 
     stageSurvey: () => {
-        const survey = new Scene('survey');
-        survey.enter((ctx) => ctx.reply('What is your question? if you finish your question, type /done'));
-        survey.leave((ctx) => ctx.reply('Your question already noted.'));
-        survey.command('done', leave());
-        survey.on('message', (ctx) => ctx.reply('Send `hi`'));
-        const stage = new Stage([survey], {ttl: 10});
-        stage.register(survey);
-        return stage;
-    }
+        let key = "";
+        const survey = new Scene('add_question_survey');
+        survey.enter((ctx) => ctx.reply('What is your question?'));
+        survey.on('message', ctx => {
+            return admin.database().ref('questions')
+                .push({ question: ctx.message.text })
+                .then(ref => {
+                    key = ref.key;
+                    return ctx.scene.enter('survey_choice_count');
+                });
+        });
+
+        const choices = new Scene('survey_choice_count');
+        choices.enter((ctx) => ctx.reply('Submit your choices separated by - character'));
+        choices.leave((ctx) => ctx.reply('Your question and choices already noted.'));
+        choices.on('message', ctx => {
+            return admin.database().ref('questions').child(key)
+                .update({ choices: ctx.message.text.split('-') })
+                .then(() => ctx.scene.leave());
+        });
+
+        return new Stage([survey, choices]);
+    },
 
 };
 
 
+// admin.database().ref('users').once('value').then(snapshot => {
+//     snapshot.forEach(child => {
+//         Api.sendMessage(child.key, "Test Message");
+//     });
+// });
 //
 //
 //

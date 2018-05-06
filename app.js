@@ -2,17 +2,20 @@ const logic = require('./logic');
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
+const schedule = require('node-schedule');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const indexRouter = require('./routes/index');
 const Telegraf = require('telegraf');
 const commandParts = require('telegraf-command-parts');
 const Session = require('telegraf/session');
+const Telegram = require('telegraf/telegram');
 const Stage = require('telegraf/stage');
-const { enter, leave } = Stage;
-
+const Api = new Telegram(process.env.TOKEN);
 const bot = new Telegraf(process.env.TOKEN);
 const app = express();
+
+const { enter, leave } = Stage;
 
 // bot setup
 bot.use(Session());
@@ -20,12 +23,13 @@ bot.use(commandParts());
 bot.use(logic.stageSurvey().middleware());
 bot.catch(logic.error);
 bot.start(logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerUpdateEmail, logic.greeting);
-bot.command('my_profile', logic.triggerCurrentProfile);
-// bot.command('survey', enter('survey'));
+bot.command('my_profile', logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerCurrentProfile);
+bot.command('add_question_survey', logic.triggerSaveUsername, logic.triggerAuthorizeEmail, enter('add_question_survey'));
 
-// bot.command('update_email', logic.updateUsername, ctx => {
-//     return ctx.reply("Mohon login menggunakan button dibawah ini", authButton)
-// });
+// 0 13 * * FRI
+// const surveySchedule = schedule.scheduleJob('* * * * *', (date) => { logic.triggerSurvey(date) });
+
+// bot.command('survey', enter('survey'));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
