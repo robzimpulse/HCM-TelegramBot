@@ -1,5 +1,4 @@
 const logic = require('./logic');
-const sha1 = require('sha1');
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -39,11 +38,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.all('/auth', function (req, res) {
-    const hash = sha1(req.query.code);
-    logic.createHash(hash, req.query.code);
-    res.redirect('http://t.me/bl_hcm_bot?start='+hash);
-});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -12,9 +12,10 @@ admin.initializeApp({
 
 const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
+const redirectUrl = 'https://us-central1-hcm-telegrambot.cloudfunctions.net/auth';
 const Markup = require('telegraf/markup');
 const { google }= require('googleapis');
-const oauth2Client = new google.auth.OAuth2(clientId,clientSecret,'http://localhost:3000/auth');
+const oauth2Client = new google.auth.OAuth2(clientId,clientSecret,redirectUrl);
 const scope = ['https://www.googleapis.com/auth/userinfo.email'];
 const url = oauth2Client.generateAuthUrl({access_type: 'offline', scope: scope});
 const authButton = Markup.inlineKeyboard([ Markup.urlButton('Authorize️', url)]).extra();
