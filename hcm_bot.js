@@ -1,9 +1,10 @@
-const logic = require('./hcm_bot_logic/');
+const logic = require('./logic/hcm_bot_logic');
 const Telegraf = require('telegraf');
 const commandParts = require('telegraf-command-parts');
 const Session = require('telegraf/session');
 const Stage = require('telegraf/stage');
 const bot = new Telegraf(process.env.TOKEN);
+const schedule = require('node-schedule');
 
 const { enter, leave } = Stage;
 
