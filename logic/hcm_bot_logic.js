@@ -117,10 +117,10 @@ module.exports = {
     }
     authRef.child(command.splitArgs[0]).once('value').then(snapshot => {
       getEmail(snapshot.val().code, data => {
-        const data = { email: data.emails[0].value, name: data.name };
+        const profile = { email: data.emails[0].value, name: data.name };
         authRef.child(command.splitArgs[0]).remove();
-        userRef.child(ctx.message.chat.id).update(data)
-          .then(() => ctx.replyWithHTML(emailUpdateSuccess + " <b>" + data.emails[0].value+ "</b>"))
+        userRef.child(ctx.message.chat.id).update(profile)
+          .then(() => ctx.replyWithHTML(emailUpdateSuccess + " <b>" + profile.email + "</b>"))
       })
     });
     return next()
