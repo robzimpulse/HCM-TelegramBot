@@ -30,10 +30,10 @@ const authRef = admin.database().ref('auth');
 const authButton = Markup.inlineKeyboard([ Markup.urlButton('Authorize️', url)]).extra();
 const Api = new Telegram(process.env.TOKEN);
 
-const emailUpdateSuccess = "Sukses menambahkan email kakak ";
-const emailNotFoundText = "Mohon maaf, Email kakak setelah di cek masih kosong. Mohon login yak.";
+const emailUpdateSuccess = "Email kamu sudah ku catat ya, ini kan email mu, yaitu ";
+const emailNotFoundText = "Mohon maaf, Email kakak setelah di cek gak ketemu. Mohon login yak.";
 const responseProfile = "Berikut ini adalah data profile kakak, apabila ada yang kosong mohon di lengkapi ya.\n\n";
-const replySurveyText = "Terima kasih sudah menjawab survey ini.";
+const replySurveyText = "Terima kasih sudah menjawab survey ini!";
 
 const getEmail = (token, next) => {
   return oauth2Client.getToken(token, (err, credentials) => {
@@ -78,10 +78,10 @@ module.exports = {
       const statusProbation = snapshot.val().statusProbation;
       return ctx.replyWithHTML(
         responseProfile +
-        "name: <b>" + name + "</b>\n" +
-        "email: <b>" + email + "</b>\n" +
+        "Nama: <b>" + name + "</b>\n" +
+        "Email: <b>" + email + "</b>\n" +
         "Gender: <b>" + gender+ "</b>\n" +
-        "Kantor: <b>" + kantor + "</b>\n" +
+        "Lokasi Kantor: <b>" + kantor + "</b>\n" +
         "Status Karyawan: <b>" + statusKaryawan+ "</b>\n" +
         "Status Probation: <b>" + statusProbation+ "</b>\n"
       );
@@ -99,7 +99,7 @@ module.exports = {
         if (!snapshot.hasChild('email')) { return ctx.replyWithHTML(emailNotFoundText, authButton); }
         const email = snapshot.val().email;
         const name = snapshot.val().name.givenName;
-        return ctx.replyWithHTML("Hello, "+name+" ada yang bisa aku bantu?")
+        return ctx.replyWithHTML("Hi "+name+"! \nAda yang bisa aku bantu?")
       });
     }
 
@@ -156,7 +156,7 @@ module.exports = {
   stages: () => {
     let key = "";
     const survey = new Scene('add_question_survey');
-    survey.enter((ctx) => ctx.reply('What is your question?'));
+    survey.enter((ctx) => ctx.reply('Ketik pertanyaan mu disini?'));
     survey.on('message', ctx => {
       return questionRef.push({
         question: ctx.message.text
@@ -167,7 +167,7 @@ module.exports = {
     });
 
     const choices = new Scene('survey_choice_count');
-    choices.enter((ctx) => ctx.reply('Submit your choices separated by - character'));
+    choices.enter((ctx) => ctx.reply('Masukkan pilihan jawaban nya, di pisahkan karakter - \nContoh: ```Satu-Dua-Empat-Sembilan```'));
     choices.leave((ctx) => ctx.reply('Your question and choices already noted.'));
     choices.on('message', ctx => questionRef.child(key)
       .update({choices: ctx.message.text.split('-')}).then(() => ctx.scene.leave())
@@ -204,7 +204,7 @@ module.exports = {
     const profileGender = new Scene('profile_gender');
     let optionsGender = ['Cewek', 'Cowok'].map((element) => Markup.callbackButton(element, element));
     profileGender.enter((ctx) => ctx.reply('Kamu cewek / cowok?', Markup.inlineKeyboard(_.chunk(optionsGender, 2)).extra()));
-    profileGender.leave((ctx) => ctx.reply('Data Kamu sudah diupdate, silahkan melihat di /my_profile'));
+    profileGender.leave((ctx) => ctx.reply('Data Kamu sudah diupdate, coba cek deh di /my_profile'));
     profileGender.on('callback_query',  ctx => {
       const chatId = ctx.callbackQuery.message.chat.id;
       console.log('update gender '+ctx.callbackQuery.data);
