@@ -15,6 +15,7 @@ bot.use(logic.stageSurvey().middleware());
 bot.catch(logic.error);
 bot.start(logic.triggerStart);
 bot.command('my_profile', logic.triggerCurrentProfile);
+bot.command('update_profile', enter('profile_kantor'));
 bot.command('add_question_survey', enter('add_question_survey'));
 bot.on('callback_query', logic.triggerAnswerSurvey);
 

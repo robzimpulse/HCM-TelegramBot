@@ -72,10 +72,18 @@ module.exports = {
       if (!snapshot.hasChild('email')) { return ctx.replyWithHTML(emailNotFoundText, authButton); }
       const email = snapshot.val().email;
       const name = snapshot.val().name.givenName;
+      const kantor = snapshot.val().kantor;
+      const gender = snapshot.val().gender;
+      const statusKaryawan = snapshot.val().statusKaryawan;
+      const statusProbation = snapshot.val().statusProbation;
       return ctx.replyWithHTML(
         responseProfile +
         "name: <b>" + name + "</b>\n" +
-        "email: <b>" + email + "</b>"
+        "email: <b>" + email + "</b>\n" +
+        "Gender: <b>" + gender+ "</b>\n" +
+        "Kantor: <b>" + kantor + "</b>\n" +
+        "Status Karyawan: <b>" + statusKaryawan+ "</b>\n" +
+        "Status Probation: <b>" + statusProbation+ "</b>\n"
       );
     });
   },
@@ -107,23 +115,21 @@ module.exports = {
 
   triggerAnswerSurvey: (ctx) => {
     getQuestionId(ctx.callbackQuery.message.text).then((snapshot) => {
+      if (!snapshot.val()) { return }
       const questionKey = Object.keys(snapshot.val())[0];
-      if (!questionKey) {
-        return
-      }
+      if (!questionKey) { return }
       getUserChatId('@' + ctx.callbackQuery.from.username).then((snapshot) => {
+        if (!snapshot.val()) { return }
         const userKey = Object.keys(snapshot.val())[0];
-        if (!userKey) {
-          return
-        }
+        if (!userKey) { return }
         userRef.child(userKey).child('answers').child(questionKey).set(ctx.callbackQuery.data).then(() => {
           let chatId = ctx.callbackQuery.message.chat.id;
           let username = "@" + ctx.callbackQuery.message.chat.username;
           console.log("triggerAnswerSurvey: " + chatId + " - " + username);
+          ctx.reply(replySurveyText);
         });
       });
     });
-    ctx.reply(replySurveyText);
     return ctx.answerCbQuery();
   },
 
@@ -135,9 +141,7 @@ module.exports = {
           userRef.child(child.key).once('value').then((userSnapshot) => {
             let unansweredQuestionIds = Object.keys(snapshot.val())
               .filter((element, index) => !userSnapshot.child('answers').hasChild(element));
-            if (unansweredQuestionIds.length < 1) {
-              return
-            }
+            if (unansweredQuestionIds.length < 1) { return }
             let questionId = _.first(_.shuffle(unansweredQuestionIds));
             let buttons = snapshot.child(questionId).val().choices
               .map((element, index) => Markup.callbackButton(element, index));
@@ -165,15 +169,49 @@ module.exports = {
     const choices = new Scene('survey_choice_count');
     choices.enter((ctx) => ctx.reply('Submit your choices separated by - character'));
     choices.leave((ctx) => ctx.reply('Your question and choices already noted.'));
-    choices.on('message', ctx => {
-      return questionRef.child(key)
-        .update({
-          choices: ctx.message.text.split('-')
-        })
-        .then(() => ctx.scene.leave());
+    choices.on('message', ctx => questionRef.child(key)
+      .update({choices: ctx.message.text.split('-')}).then(() => ctx.scene.leave())
+    );
+
+    const profileKantor = new Scene('profile_kantor');
+    let optionsKantor = ['PCV','Jason Ampera 22','Kecapi','Bandung','Cimanggis','Full Remote','Other']
+      .map((element) => Markup.callbackButton(element, element));
+    profileKantor.enter((ctx) => ctx.reply('Kantor kamu dimana?', Markup.inlineKeyboard(_.chunk(optionsKantor, 2)).extra()));
+    profileKantor.on('callback_query',  ctx => {
+      const chatId = ctx.callbackQuery.message.chat.id;
+      console.log('update kantor '+ctx.callbackQuery.data);
+      return userRef.child(chatId).update({ kantor: ctx.callbackQuery.data }).then(() => ctx.scene.enter('profile_status_karyawan'));
     });
 
-    return new Stage([survey, choices]);
+    const profileStatusKaryawan = new Scene('profile_status_karyawan');
+    let optionsStatusKaryawan = ['Full Time', 'Part Time', 'Other'].map((element) => Markup.callbackButton(element, element));
+    profileStatusKaryawan.enter((ctx) => ctx.reply('Status karyawan kamu apa?', Markup.inlineKeyboard(_.chunk(optionsStatusKaryawan, 2)).extra()));
+    profileStatusKaryawan.on('callback_query',  ctx => {
+      const chatId = ctx.callbackQuery.message.chat.id;
+      console.log('update status karyawan '+ctx.callbackQuery.data);
+      return userRef.child(chatId).update({ statusKaryawan: ctx.callbackQuery.data }).then(() => ctx.scene.enter('profile_status_probation'));
+    });
+
+    const profileProbation = new Scene('profile_status_probation');
+    let optionsProbation = ['Masih Probation','Lulus'].map((element) => Markup.callbackButton(element, element));
+    profileProbation.enter((ctx) => ctx.reply('Masih Probation?', Markup.inlineKeyboard(_.chunk(optionsProbation, 2)).extra()));
+    profileProbation.on('callback_query',  ctx => {
+      const chatId = ctx.callbackQuery.message.chat.id;
+      console.log('update probation '+ctx.callbackQuery.data);
+      return userRef.child(chatId).update({ statusProbation: ctx.callbackQuery.data }).then(() => ctx.scene.enter('profile_gender'));
+    });
+
+    const profileGender = new Scene('profile_gender');
+    let optionsGender = ['Cewek', 'Cowok'].map((element) => Markup.callbackButton(element, element));
+    profileGender.enter((ctx) => ctx.reply('Kamu cewek / cowok?', Markup.inlineKeyboard(_.chunk(optionsGender, 2)).extra()));
+    profileGender.leave((ctx) => ctx.reply('Data Kamu sudah diupdate, silahkan melihat di /my_profile'));
+    profileGender.on('callback_query',  ctx => {
+      const chatId = ctx.callbackQuery.message.chat.id;
+      console.log('update gender '+ctx.callbackQuery.data);
+      return userRef.child(chatId).update({ gender: ctx.callbackQuery.data }).then(() => ctx.scene.leave());
+    });
+
+    return new Stage([survey, choices, profileGender, profileKantor, profileProbation, profileStatusKaryawan]);
   }
 
 };
