@@ -58,6 +58,25 @@ const getEmail = (token, next) => {
 
 const getQuestionId = (question) => questionRef.orderByChild('question').equalTo(question).limitToFirst(1).once('value');
 const getUserChatId = (username) => userRef.orderByChild('username').equalTo(username).limitToFirst(1).once('value');
+const blastSurvey = (date) => {
+  questionRef.once('value').then((snapshot) => {
+    console.log("run survey at " + date);
+    userRef.once('value').then(userSnapshot => {
+      userSnapshot.forEach(child => {
+        userRef.child(child.key).once('value').then((userSnapshot) => {
+          let unansweredQuestionIds = Object.keys(snapshot.val())
+            .filter((element, index) => !userSnapshot.child('answers').hasChild(element));
+          if (unansweredQuestionIds.length < 1) { return }
+          let questionId = _.first(_.shuffle(unansweredQuestionIds));
+          let buttons = snapshot.child(questionId).val().choices
+            .map((element, index) => Markup.callbackButton(element, index));
+          const choices = Markup.inlineKeyboard(_.chunk(buttons, 2)).extra();
+          Api.sendMessage(child.key, snapshot.child(questionId).val().question, choices);
+        });
+      })
+    });
+  });
+};
 
 module.exports = {
 
@@ -134,45 +153,44 @@ module.exports = {
     return ctx.answerCbQuery();
   },
 
-  triggerSurvey: (date) => {
-    questionRef.once('value').then((snapshot) => {
-      console.log("run survey at " + date);
-      userRef.once('value').then(userSnapshot => {
-        userSnapshot.forEach(child => {
-          userRef.child(child.key).once('value').then((userSnapshot) => {
-            let unansweredQuestionIds = Object.keys(snapshot.val())
-              .filter((element, index) => !userSnapshot.child('answers').hasChild(element));
-            if (unansweredQuestionIds.length < 1) { return }
-            let questionId = _.first(_.shuffle(unansweredQuestionIds));
-            let buttons = snapshot.child(questionId).val().choices
-              .map((element, index) => Markup.callbackButton(element, index));
-            const choices = Markup.inlineKeyboard(_.chunk(buttons, 2)).extra();
-            Api.sendMessage(child.key, snapshot.child(questionId).val().question, choices);
-          });
-        })
-      });
-    });
-  },
+  triggerSurvey: blastSurvey,
 
   stages: () => {
     let key = "";
     const survey = new Scene('add_question_survey');
     survey.enter((ctx) => ctx.reply('Ketik pertanyaan mu disini?'));
     survey.on('message', ctx => {
-      return questionRef.push({
-        question: ctx.message.text
-      }).then(ref => {
+      return questionRef.push({question: ctx.message.text}).then(ref => {
         key = ref.key;
         return ctx.scene.enter('survey_choice_count');
       });
     });
 
     const choices = new Scene('survey_choice_count');
-    choices.enter((ctx) => ctx.reply('Masukkan pilihan jawaban nya, di pisahkan karakter - \nContoh: ```Satu-Dua-Empat-Sembilan```'));
+    choices.enter((ctx) => ctx.replyWithMarkdown('Masukkan pilihan jawaban nya, di pisahkan karakter - \nContoh: ```Satu-Dua-Empat-Sembilan```'));
     choices.leave((ctx) => ctx.reply('Your question and choices already noted.'));
     choices.on('message', ctx => questionRef.child(key)
       .update({choices: ctx.message.text.split('-')}).then(() => ctx.scene.leave())
     );
+
+    let surveyKey = "";
+    const blastSurveyScene = new Scene('blast_survey');
+    blastSurveyScene.enter((ctx) => ctx.reply('Ketik pertanyaan mu disini?'));
+    blastSurveyScene.on('message', ctx => {
+      return questionRef.push({question: ctx.message.text}).then(ref => {
+        surveyKey = ref.key;
+        return ctx.scene.enter('blast_survey_choice_count');
+      });
+    });
+
+    const blastChoices = new Scene('blast_survey_choice_count');
+    blastChoices.enter((ctx) => ctx.replyWithMarkdown('Masukkan pilihan jawaban nya, di pisahkan karakter - \nContoh: ```Satu-Dua-Empat-Sembilan```'));
+    blastChoices.leave((ctx) => {
+      blastSurvey(new Date());
+      return ctx.reply('Your question and choices already noted.')
+    });
+    blastChoices.on('message', ctx => questionRef.child(surveyKey).update({choices: ctx.message.text.split('-')})
+      .then(() => ctx.scene.leave()));
 
     const profileKantor = new Scene('profile_kantor');
     let optionsKantor = ['PCV','Jason Ampera 22','Kecapi','Bandung','Cimanggis','Full Remote','Other']
@@ -240,7 +258,10 @@ module.exports = {
     });
     moodCurhat.on('message', ctx => curhatRef.child(curhatKey).update({ content: ctx.message.text }).then(() => ctx.scene.leave()));
 
-    return new Stage([survey, choices, profileGender, profileKantor, profileProbation, profileStatusKaryawan, kategoriCurhat, moodCurhat ]);
+    return new Stage([
+      survey, choices, profileGender, profileKantor, profileProbation, profileStatusKaryawan,
+      kategoriCurhat, moodCurhat, blastSurveyScene, blastChoices
+    ]);
   }
 
 };
