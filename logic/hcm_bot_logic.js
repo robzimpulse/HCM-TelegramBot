@@ -71,7 +71,12 @@ module.exports = {
     return userRef.child(chatId).once('value').then(snapshot => {
       if (!snapshot.hasChild('email')) { return ctx.replyWithHTML(emailNotFoundText, authButton); }
       const email = snapshot.val().email;
-      return ctx.replyWithHTML(responseProfile + "name: <b>" + username + "</b>\n" + "email: <b>" + email + "</b>")
+      const name = snapshot.val().name.givenName;
+      return ctx.replyWithHTML(
+        responseProfile +
+        "name: <b>" + name + "</b>\n" +
+        "email: <b>" + email + "</b>"
+      );
     });
   },
 
