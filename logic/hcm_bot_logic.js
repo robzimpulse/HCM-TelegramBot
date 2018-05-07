@@ -153,7 +153,7 @@ module.exports = {
     });
   },
 
-  stageSurvey: () => {
+  stages: () => {
     let key = "";
     const survey = new Scene('add_question_survey');
     survey.enter((ctx) => ctx.reply('What is your question?'));

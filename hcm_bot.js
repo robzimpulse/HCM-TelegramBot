@@ -11,7 +11,7 @@ const { enter, leave } = Stage;
 // bot setup
 bot.use(Session());
 bot.use(commandParts());
-bot.use(logic.stageSurvey().middleware());
+bot.use(logic.stages().middleware());
 bot.catch(logic.error);
 bot.start(logic.triggerStart);
 bot.command('my_profile', logic.triggerCurrentProfile);
