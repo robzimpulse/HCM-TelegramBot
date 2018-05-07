@@ -30,14 +30,9 @@ const authRef = admin.database().ref('auth');
 const authButton = Markup.inlineKeyboard([ Markup.urlButton('Authorize️', url)]).extra();
 const Api = new Telegram(process.env.TOKEN);
 
-const emailUpdateSuccess = "Sukses menambahkan email kakak";
+const emailUpdateSuccess = "Sukses menambahkan email kakak ";
 const emailNotFoundText = "Mohon maaf, Email kakak setelah di cek masih kosong. Mohon login yak.";
-const startText = "Hello, Ada yang bisa aku bantu?";
-const responseText = "Baik kak, Keluhannya akan kami tindak lanjuti";
 const responseProfile = "Berikut ini adalah data profile kakak, apabila ada yang kosong mohon di lengkapi ya.\n\n";
-const openingText = "Halo, kami dari Tim HCM Bukalapak. " +
-  "Saat ini kami sedang melaksanakan Employee Survey sebagai salah satu masukan untuk Bukalapak. " +
-  "Apabila Anda tidak menjawab dalam waktu 5 menit, maka saya akan mengirimkan pertanyaan lanjutan.";
 const replySurveyText = "Terima kasih sudah menjawab survey ini.";
 
 const getEmail = (token, next) => {
@@ -60,21 +55,14 @@ const getEmail = (token, next) => {
   });
 };
 
-const getQuestionId = (question) => {
-  return questionRef.orderByChild('question').equalTo(question).limitToFirst(1).once('value')
-};
-
-const getUserChatId = (username) => {
-  return userRef.orderByChild('username').equalTo(username).limitToFirst(1).once('value');
-};
+const getQuestionId = (question) => questionRef.orderByChild('question').equalTo(question).limitToFirst(1).once('value');
+const getUserChatId = (username) => userRef.orderByChild('username').equalTo(username).limitToFirst(1).once('value');
 
 module.exports = {
 
   error: (error) => {
     console.log("Error: " + error);
   },
-
-  greeting: ctx => ctx.replyWithHTML(startText),
 
   triggerCurrentProfile: ctx => {
     const username = '@'+ctx.message.chat.username;
@@ -87,42 +75,29 @@ module.exports = {
     });
   },
 
-  triggerSaveUsername: (ctx, next) => {
-    console.log("triggerSaveUsername: " + ctx.message.chat.id + " - @" + ctx.message.chat.username);
-    userRef.child(ctx.message.chat.id).update({
-      username: "@" + ctx.message.chat.username
-    });
-    return next()
-  },
+  triggerStart: ctx => {
+    const username = '@'+ctx.message.chat.username;
+    const chatId = ctx.message.chat.id;
+    const hash = ctx.state.command.splitArgs[0];
+    console.log("triggerStart: " + username + ' - ' + chatId + ' - ' + hash);
 
-  triggerAuthorizeEmail: (ctx, next) => {
-    console.log("triggerAuthorizeEmail: " + ctx.message.chat.id + " - @" + ctx.message.chat.username);
-    setTimeout(() => {
-      userRef.child(ctx.message.chat.id).once('value').then(snapshot => {
-        if (snapshot.hasChild('email')) {
-          return
-        }
-        ctx.replyWithHTML(emailNotFoundText, authButton);
+    if (hash.length < 1) {
+      return userRef.child(chatId).once('value').then(snapshot => {
+        if (!snapshot.hasChild('email')) { return ctx.replyWithHTML(emailNotFoundText, authButton); }
+        const email = snapshot.val().email;
+        const name = snapshot.val().name.givenName;
+        return ctx.replyWithHTML("Hello, "+name+" ada yang bisa aku bantu?")
       });
-    }, 1000);
-    return next();
-  },
-
-  triggerUpdateEmail: (ctx, next) => {
-    console.log("triggerUpdateEmail: " + ctx.message.chat.id + " - @" + ctx.message.chat.username);
-    const command = ctx.state.command;
-    if (command.command !== 'start' || command.splitArgs[0].length < 1) {
-      return next();
     }
-    authRef.child(command.splitArgs[0]).once('value').then(snapshot => {
+
+    authRef.child(hash).once('value').then(snapshot => {
+      if (!snapshot.hasChild('code')) { return }
       getEmail(snapshot.val().code, data => {
-        const profile = { email: data.emails[0].value, name: data.name };
-        authRef.child(command.splitArgs[0]).remove();
-        userRef.child(ctx.message.chat.id).update(profile)
-          .then(() => ctx.replyWithHTML(emailUpdateSuccess + " <b>" + profile.email + "</b>"))
+        const profile = { email: data.emails[0].value, name: data.name, username: username };
+        authRef.child(hash).remove().then(() => userRef.child(chatId).update(profile));
+        ctx.replyWithHTML(emailUpdateSuccess + "<b>" + profile.email + "</b>")
       })
     });
-    return next()
   },
 
   triggerAnswerSurvey: (ctx) => {

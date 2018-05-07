@@ -13,9 +13,9 @@ bot.use(Session());
 bot.use(commandParts());
 bot.use(logic.stageSurvey().middleware());
 bot.catch(logic.error);
-bot.start(logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerUpdateEmail, logic.greeting);
+bot.start(logic.triggerStart);
 bot.command('my_profile', logic.triggerCurrentProfile);
-bot.command('add_question_survey', logic.triggerSaveUsername, logic.triggerAuthorizeEmail, enter('add_question_survey'));
+bot.command('add_question_survey', enter('add_question_survey'));
 bot.on('callback_query', logic.triggerAnswerSurvey);
 
 // 0 0 13 * * FRI // run every friday at 13:00:00
