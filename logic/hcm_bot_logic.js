@@ -16,7 +16,7 @@ const { enter, leave }    = Stage;
 const serviceAccount      = require('./hcm-telegrambot-a6db72963a37.json');
 
 const oauth2Client = new google.auth.OAuth2(process.env.CLIENT_ID,process.env.CLIENT_SECRET,'https://us-central1-hcm-telegrambot.cloudfunctions.net/auth');
-const scope = ['https://www.googleapis.com/auth/userinfo.email'];
+const scope = ['https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'];
 const url = oauth2Client.generateAuthUrl({access_type: 'offline', scope: scope});
 
 admin.initializeApp({
@@ -55,7 +55,7 @@ const getEmail = (token, next) => {
       if (err) {
         return next(null);
       }
-      return next(response.data.emails[0].value);
+      return next(response.data);
     });
   });
 };
@@ -116,12 +116,11 @@ module.exports = {
       return next();
     }
     authRef.child(command.splitArgs[0]).once('value').then(snapshot => {
-      getEmail(snapshot.val().code, email => {
+      getEmail(snapshot.val().code, data => {
+        const data = { email: data.emails[0].value, name: data.name };
         authRef.child(command.splitArgs[0]).remove();
-        userRef.child(ctx.message.chat.id).update({
-            email: email
-          })
-          .then(() => ctx.replyWithHTML(emailUpdateSuccess + " <b>" + email + "</b>"))
+        userRef.child(ctx.message.chat.id).update(data)
+          .then(() => ctx.replyWithHTML(emailUpdateSuccess + " <b>" + data.emails[0].value+ "</b>"))
       })
     });
     return next()
