@@ -26,6 +26,7 @@ admin.initializeApp({
 const questionRef = admin.database().ref('questions');
 const userRef = admin.database().ref('users');
 const authRef = admin.database().ref('auth');
+const curhatRef = admin.database().ref('curhats');
 
 const authButton = Markup.inlineKeyboard([ Markup.urlButton('Authorize️', url)]).extra();
 const Api = new Telegram(process.env.TOKEN);
@@ -211,7 +212,35 @@ module.exports = {
       return userRef.child(chatId).update({ gender: ctx.callbackQuery.data }).then(() => ctx.scene.leave());
     });
 
-    return new Stage([survey, choices, profileGender, profileKantor, profileProbation, profileStatusKaryawan]);
+    let curhatKey = "";
+    const kategoriCurhat = new Scene('curhat');
+    let optionCurhat = ['Employee Service','Fasilitas Umum','Katering','Perlengkapan / Fasilitias Kerja']
+      .map((element) => Markup.callbackButton(element, element));
+    kategoriCurhat.enter((ctx) => ctx.reply('Mau curhat soal apa?', Markup.inlineKeyboard(_.chunk(optionCurhat, 2)).extra()));
+    kategoriCurhat.on('callback_query',  ctx => {
+      return curhatRef.push({category: ctx.callbackQuery.data, user: ctx.callbackQuery.message.chat.id}).then(ref => {
+        curhatKey = ref.key;
+        return ctx.scene.enter('moodCurhat');
+      });
+    });
+
+    const moodCurhat = new Scene('moodCurhat');
+    let optionMoodCurhat = ['Sangat Bahagia','Bahagia','Netral','Sedih','Sangat Menyedihkan'];
+    moodCurhat.enter((ctx) => ctx.reply('Curhat ini karena kamu bahagia atau karena sesuatu yang menyedihkan?',
+      Markup.inlineKeyboard(_.chunk(optionMoodCurhat.map((element) => Markup.callbackButton(element, element)), 2)).extra()));
+    moodCurhat.leave((ctx) => ctx.reply('Terima kasih sudah curhat ke aku.'));
+    moodCurhat.on('callback_query',  ctx => {
+      if (optionMoodCurhat.indexOf(ctx.callbackQuery.data < 2)) {
+        ctx.reply('Duh, aku jadi ikut senang, sini curhat');
+      } else if (optionMoodCurhat.indexOf(ctx.callbackQuery.data > 2)) {
+        ctx.reply('Duh, aku jadi ikut sedih, sini curhat');
+      } else {
+        ctx.reply('sini curhat');
+      }
+    });
+    moodCurhat.on('message', ctx => curhatRef.child(curhatKey).update({ content: ctx.message.text }).then(() => ctx.scene.leave()));
+
+    return new Stage([survey, choices, profileGender, profileKantor, profileProbation, profileStatusKaryawan, kategoriCurhat, moodCurhat ]);
   }
 
 };

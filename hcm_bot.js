@@ -17,6 +17,7 @@ bot.start(logic.triggerStart);
 bot.command('my_profile', logic.triggerCurrentProfile);
 bot.command('update_profile', enter('profile_kantor'));
 bot.command('add_question_survey', enter('add_question_survey'));
+bot.command('mau_curhat', enter('curhat'));
 bot.on('callback_query', logic.triggerAnswerSurvey);
 
 // 0 0 13 * * FRI // run every friday at 13:00:00
