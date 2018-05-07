@@ -77,14 +77,13 @@ module.exports = {
   greeting: ctx => ctx.replyWithHTML(startText),
 
   triggerCurrentProfile: ctx => {
-    console.log("triggerCurrentProfile: " + ctx.message.chat.id + " - @" + ctx.message.chat.username);
-    userRef.child(ctx.message.chat.id).once('value').then(snapshot => {
-      const username = snapshot.val().username;
+    const username = '@'+ctx.message.chat.username;
+    const chatId = ctx.message.chat.id;
+    console.log("triggerCurrentProfile: " + username + ' - ' + chatId);
+    return userRef.child(chatId).once('value').then(snapshot => {
+      if (!snapshot.hasChild('email')) { return ctx.replyWithHTML(emailNotFoundText, authButton); }
       const email = snapshot.val().email;
-      return ctx.replyWithHTML(responseProfile +
-        "name: <b>" + username + "</b>\n" +
-        "email: <b>" + email + "</b>"
-      )
+      return ctx.replyWithHTML(responseProfile + "name: <b>" + username + "</b>\n" + "email: <b>" + email + "</b>")
     });
   },
 

@@ -14,7 +14,7 @@ bot.use(commandParts());
 bot.use(logic.stageSurvey().middleware());
 bot.catch(logic.error);
 bot.start(logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerUpdateEmail, logic.greeting);
-bot.command('my_profile', logic.triggerSaveUsername, logic.triggerAuthorizeEmail, logic.triggerCurrentProfile);
+bot.command('my_profile', logic.triggerCurrentProfile);
 bot.command('add_question_survey', logic.triggerSaveUsername, logic.triggerAuthorizeEmail, enter('add_question_survey'));
 bot.on('callback_query', logic.triggerAnswerSurvey);
 
