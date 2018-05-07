@@ -193,7 +193,7 @@ module.exports = {
     });
 
     const profileProbation = new Scene('profile_status_probation');
-    let optionsProbation = ['Masih Probation','Lulus'].map((element) => Markup.callbackButton(element, element));
+    let optionsProbation = ['Masih Probation', 'Kontrak','Lulus'].map((element) => Markup.callbackButton(element, element));
     profileProbation.enter((ctx) => ctx.reply('Masih Probation?', Markup.inlineKeyboard(_.chunk(optionsProbation, 2)).extra()));
     profileProbation.on('callback_query',  ctx => {
       const chatId = ctx.callbackQuery.message.chat.id;
