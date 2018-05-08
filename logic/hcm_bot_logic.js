@@ -33,7 +33,7 @@ const Api = new Telegram(process.env.TOKEN);
 
 const emailUpdateSuccess = "Email kamu sudah ku catat ya, ini kan email mu, yaitu ";
 const emailNotFoundText = "Mohon maaf, Email kakak setelah di cek gak ketemu. Mohon login yak.";
-const responseProfile = "Berikut ini adalah data profile kakak, apabila ada yang kosong mohon di lengkapi ya.\n\n";
+const responseProfile = "Berikut ini adalah data profile kakak, apabila ada yang kosong mohon di lengkapi di /update_profile.\n\n";
 const replySurveyText = "Terima kasih sudah menjawab survey ini!";
 
 const getEmail = (token, next) => {
@@ -88,10 +88,14 @@ module.exports = {
       if (!snapshot.hasChild('email')) { return ctx.replyWithHTML(emailNotFoundText, authButton); }
       const email = snapshot.val().email;
       const name = snapshot.val().name.givenName;
-      const kantor = snapshot.val().kantor;
-      const gender = snapshot.val().gender;
-      const statusKaryawan = snapshot.val().statusKaryawan;
-      const statusProbation = snapshot.val().statusProbation;
+      let kantor = '-';
+      let gender = '-';
+      let statusKaryawan = '-';
+      let statusProbation = '-';
+      if (snapshot.hasChild('kantor')) { kantor = snapshot.val().kantor }
+      if (snapshot.hasChild('gender')) { gender = snapshot.val().gender }
+      if (snapshot.hasChild('statusKaryawan')) { statusKaryawan = snapshot.val().statusKaryawan }
+      if (snapshot.hasChild('statusProbation')) { statusProbation = snapshot.val().statusProbation }
       return ctx.replyWithHTML(
         responseProfile +
         "Nama: <b>" + name + "</b>\n" +
