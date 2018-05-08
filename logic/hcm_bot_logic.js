@@ -58,20 +58,16 @@ const getEmail = (token, next) => {
 
 const getQuestionId = (question) => questionRef.orderByChild('question').equalTo(question).limitToFirst(1).once('value');
 const getUserChatId = (username) => userRef.orderByChild('username').equalTo(username).limitToFirst(1).once('value');
-const blastSurvey = (date) => {
-  questionRef.once('value').then((snapshot) => {
-    console.log("run survey at " + date);
+const blastSurvey = (key) => {
+  questionRef.child(key).once('value').then((snapshot) => {
+    console.log("run survey at " + new Date());
     userRef.once('value').then(userSnapshot => {
       userSnapshot.forEach(child => {
         userRef.child(child.key).once('value').then((userSnapshot) => {
-          let unansweredQuestionIds = Object.keys(snapshot.val())
-            .filter((element, index) => !userSnapshot.child('answers').hasChild(element));
-          if (unansweredQuestionIds.length < 1) { return }
-          let questionId = _.first(_.shuffle(unansweredQuestionIds));
-          let buttons = snapshot.child(questionId).val().choices
+          let buttons = snapshot.val().choices
             .map((element, index) => Markup.callbackButton(element, index));
           const choices = Markup.inlineKeyboard(_.chunk(buttons, 2)).extra();
-          Api.sendMessage(child.key, snapshot.child(questionId).val().question, choices);
+          Api.sendMessage(child.key, snapshot.val().question, choices);
         });
       })
     });
@@ -153,7 +149,25 @@ module.exports = {
     return ctx.answerCbQuery();
   },
 
-  triggerSurvey: blastSurvey,
+  triggerSurvey: (date) => {
+    questionRef.once('value').then((snapshot) => {
+      console.log("run survey at " + date);
+      userRef.once('value').then(userSnapshot => {
+        userSnapshot.forEach(child => {
+          userRef.child(child.key).once('value').then((userSnapshot) => {
+            let unansweredQuestionIds = Object.keys(snapshot.val())
+              .filter((element, index) => !userSnapshot.child('answers').hasChild(element));
+            if (unansweredQuestionIds.length < 1) { return }
+            let questionId = _.first(_.shuffle(unansweredQuestionIds));
+            let buttons = snapshot.child(questionId).val().choices
+              .map((element, index) => Markup.callbackButton(element, index));
+            const choices = Markup.inlineKeyboard(_.chunk(buttons, 2)).extra();
+            Api.sendMessage(child.key, snapshot.child(questionId).val().question, choices);
+          });
+        })
+      });
+    });
+  },
 
   stages: () => {
     let key = "";
@@ -186,7 +200,7 @@ module.exports = {
     const blastChoices = new Scene('blast_survey_choice_count');
     blastChoices.enter((ctx) => ctx.replyWithMarkdown('Masukkan pilihan jawaban nya, di pisahkan karakter - \nContoh: ```Satu-Dua-Empat-Sembilan```'));
     blastChoices.leave((ctx) => {
-      blastSurvey(new Date());
+      blastSurvey(surveyKey);
       return ctx.reply('Your question and choices already noted.')
     });
     blastChoices.on('message', ctx => questionRef.child(surveyKey).update({choices: ctx.message.text.split('-')})
